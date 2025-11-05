@@ -10,7 +10,7 @@ def get_connection():
     return mysql.connector.connect(
         host="localhost",
         user="root",  
-        password="Ashwini205@",  
+        password="Ashwini205@", 
         database="skill_sync"
     )
 # Helper Functions
@@ -121,16 +121,16 @@ def student_dashboard(user):
                     if st.button(f"Unenroll — {c['title']}", key=f"unenroll_{c['course_id']}"):
                         cur.execute("DELETE FROM enrollments WHERE student_id=%s AND course_id=%s", (uid, c["course_id"]))
                         conn.commit()
-                        st.success(f"Unenrolled from {c['title']}")
+                        st.toast(f"Unenrolled from {c['title']}")
                         try: st.rerun()
-                        except: st.experimental_rerun()
+                        except: st.rerun()
                 else:
                     if st.button(f"Enroll — {c['title']}", key=f"enroll_{c['course_id']}"):
                         cur.execute("INSERT INTO enrollments (student_id, course_id) VALUES (%s,%s)", (uid, c["course_id"]))
                         conn.commit()
-                        st.success(f"Enrolled in {c['title']}")
+                        st.toast(f"Enrolled in {c['title']}")
                         try: st.rerun()
-                        except: st.experimental_rerun()
+                        except: st.rerun()
 
     elif choice == "My Courses":
         st.markdown("<div class='section-title'>My Courses</div>", unsafe_allow_html=True)
@@ -165,9 +165,9 @@ def student_dashboard(user):
                     cur.execute("INSERT INTO submissions (student_id, task_id, text_answer, file_name, submission_date) VALUES (%s,%s,%s,%s,%s)",
                                 (uid, task["task_id"], text_ans.strip() or None, fname, date.today()))
                     conn.commit()
-                    st.success("Submission saved.")
+                    st.toast("Submission saved.")
                     try: st.rerun()
-                    except: st.experimental_rerun()
+                    except: st.rerun()
 
     elif choice == "View Feedback":
         st.markdown("<div class='section-title'>Feedback Received</div>", unsafe_allow_html=True)
@@ -241,8 +241,8 @@ def expert_dashboard(user):
                 else:
                     run_query("INSERT INTO tasks (course_id, title, description, due_date) VALUES (%s,%s,%s,%s)",
                           (mapping[sel], title.strip(), desc.strip(), due))
-                    st.success("Task added successfully.")
-                    st.experimental_rerun() 
+                    st.toast("Task added successfully.")
+                    st.rerun() 
 
             tasks = run_query("SELECT task_id, title FROM tasks WHERE course_id=%s", (mapping[sel],), fetch=True)
             if tasks:
@@ -251,8 +251,8 @@ def expert_dashboard(user):
                     st.markdown(f"- {t['title']}")
                     if st.button(f"Delete — {t['title']}", key=f"del_task_{t['task_id']}"):
                         run_query("DELETE FROM tasks WHERE task_id=%s", (t['task_id'],))
-                        st.success(f"Deleted task: {t['title']}")
-                        st.experimental_rerun() 
+                        st.toast(f"Deleted task: {t['title']}")
+                        st.rerun() 
 
     elif choice == "Review Submissions":
         st.markdown("<div class='section-title'>Review Submissions</div>", unsafe_allow_html=True)
@@ -282,12 +282,12 @@ def expert_dashboard(user):
                     "INSERT INTO feedback (submission_id, expert_id, feedback_text, rating, feedback_date) VALUES (%s,%s,%s,%s,%s)",
                     (s['submission_id'], uid, fb.strip() or None, rating, date.today())
                 )
-                st.success("Feedback saved successfully.")
-                st.experimental_rerun()  
+                st.toast("Feedback saved successfully.")
+                st.rerun()  
             if st.button("Delete Submission", key=f"del_{s['submission_id']}"):
                 run_query("DELETE FROM submissions WHERE submission_id=%s", (s['submission_id'],))
-                st.success("Submission deleted.")
-                st.experimental_rerun()
+                st.toast("Submission deleted.")
+                st.rerun()
 
     elif choice == "Analytics":
         st.markdown("<div class='section-title'>Expert Analytics</div>", unsafe_allow_html=True)
@@ -350,7 +350,7 @@ def admin_dashboard(user):
                     run_query("DELETE FROM tasks WHERE course_id=%s", (c["course_id"],))
                     run_query("DELETE FROM courses WHERE course_id=%s", (c["course_id"],))
                 run_query("DELETE FROM users WHERE user_id=%s", (uid_del,))
-                st.success("User and related data deleted successfully.")
+                st.toast("User and related data deleted successfully.")
                 st.rerun()
         else:
             st.info("No users found.")
@@ -365,7 +365,7 @@ def admin_dashboard(user):
             del_id = st.number_input("Enter Course ID to delete", min_value=1, step=1)
             if st.button("Delete Course"):
                 run_query("DELETE FROM courses WHERE course_id=%s", (del_id,))
-                st.success("Course deleted successfully.")
+                st.toast("Course deleted successfully.")
                 st.rerun()
         else:
             st.info("No courses found.")
@@ -382,12 +382,15 @@ def admin_dashboard(user):
             mapping = {e["name"]: e["user_id"] for e in experts}
             sel = st.selectbox("Assign Expert", list(mapping.keys()))
             if st.button("Add Course"):
-                run_query(
-                    "INSERT INTO courses (title, description, category, duration, price, expert_id) VALUES (%s,%s,%s,%s,%s,%s)",
-                    (title.strip(), desc.strip(), cat.strip(), int(dur), float(price), mapping[sel])
-                )
-                st.success("Course added successfully.")
-                st.rerun()
+                if not title.strip():
+                    st.warning("Course title is required.")
+                else:
+                    run_query(
+                        "INSERT INTO courses (title, description, category, duration, price, expert_id) VALUES (%s,%s,%s,%s,%s,%s)",
+                        (title.strip(), desc.strip(), cat.strip(), int(dur), float(price), mapping[sel])
+                    )
+                    st.toast("Course added successfully.")
+                    st.rerun()
         else:
             st.info("No experts available to assign courses.")
     elif choice == "Analytics Overview":
@@ -414,6 +417,9 @@ def admin_dashboard(user):
 # Login / Register Page
 
 def login_register_page():
+    if st.session_state.get("force_login"):
+        st.session_state["force_login"] = False
+        st.rerun()
     choice = st.radio("Select Option", ["Login", "Register"], horizontal=True)
 
     if choice == "Login":
@@ -446,8 +452,10 @@ def login_register_page():
             else:
                 try:
                     register_user(name.strip(), email.strip(), password.strip(), role, bio.strip())
-                    st.success("Account created successfully. Please login.")
+                    st.toast("Account created successfully! Redirecting to login...")
+                    st.session_state["force_login"] = True
                     st.rerun()
+            #st.stop()
                 except mysql.connector.IntegrityError:
                     st.error("Email already exists. Please use a different email.")
 
