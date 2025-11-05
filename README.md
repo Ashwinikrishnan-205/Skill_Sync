@@ -1,58 +1,66 @@
-# Skill Sync – Online Learning & Task Management System
+<h1 align="center">Skill Sync – Online Learning & Task Management System</h1>
 
-Skill Sync is a learning platform built using Python, Streamlit, and MySQL.  
-It allows students to enroll in courses, complete tasks, and receive expert feedback, while experts and admins manage the platform.
+<p align="center">
+A role-based learning and task management platform built using <strong>Python (Streamlit)</strong> and <strong>MySQL</strong>.  
+Designed to support students in learning, experts in mentoring, and administrators in managing the platform efficiently.
+</p>
 
 ---
 
-## Features
+## Key Features
 
-### Student
-- Register and log in
+### Student Panel
+- User registration and login
 - Browse and enroll in courses
-- Submit tasks with text or file
+- Submit tasks with text or file upload
 - View expert feedback and ratings
-- Performance analytics dashboard
+- Personal dashboard with learning analytics
 
-### Expert
-- Manage and create tasks for assigned courses
+### Expert Panel
+- Create and manage tasks for assigned courses
 - Review student submissions
-- Give feedback and ratings
-- Analytics on course engagement
+- Provide feedback and ratings
+- View course engagement analytics
 
-### Admin
+### Admin Panel
 - Manage users and courses
-- View platform-wide analytics and engagement statistics
+- Assign experts to courses
+- Delete users and courses with complete data cascading
+- View platform-wide analytics and insights
 
 ---
 
-## Tech Stack
+## Technology Stack
 
-| Component | Technology |
-|----------|------------|
-Frontend | Streamlit (Python)
-Backend | Python
-Database | MySQL
-Data Handling | Pandas
-Visualization | Matplotlib
-
----
-
-## Database Structure (ER Model Summary)
-
-**Tables:**
-- `users` — stores student, expert, and admin details
-- `courses` — course information
-- `enrollments` — student-to-course mapping
-- `tasks` — tasks assigned to courses
-- `submissions` — student submissions
-- `feedback` — expert feedback on submissions
+| Layer | Technology |
+|------|-----------|
+| Frontend | Streamlit (Python) |
+| Backend | Python |
+| Database | MySQL |
+| Data Handling | Pandas |
+| Data Visualization | Matplotlib |
 
 ---
 
-## Installation & Setup
+## Database Schema (ER Model Summary)
 
-### 1. Clone the repository
-```sh
+| Table | Description |
+|------|------------|
+| `users` | Stores student, expert, and admin information |
+| `courses` | Course details |
+| `enrollments` | Student-to-course relationship |
+| `tasks` | Tasks created by experts for courses |
+| `submissions` | Student submissions |
+| `feedback` | Expert reviews and ratings |
+
+Designed with referential integrity using `ON DELETE CASCADE` and `SET NULL`.
+
+---
+
+## Setup and Installation
+
+### 1. Clone the Repository
+
+```bash
 git clone https://github.com/Ashwinikrishnan-205/Skill_Sync.git
 cd Skill_Sync
