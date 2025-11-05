@@ -455,7 +455,6 @@ def login_register_page():
                     st.toast("Account created successfully! Redirecting to login...")
                     st.session_state["force_login"] = True
                     st.rerun()
-            #st.stop()
                 except mysql.connector.IntegrityError:
                     st.error("Email already exists. Please use a different email.")
 
