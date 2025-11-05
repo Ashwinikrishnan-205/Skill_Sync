@@ -5,20 +5,15 @@ import matplotlib.pyplot as plt
 import os
 from datetime import date
 
-# ------------------------------
 # Database connection
-# ------------------------------
 def get_connection():
     return mysql.connector.connect(
         host="localhost",
-        user="root",  # change to your MySQL username
-        password="Ashwini205@",  # change to your actual MySQL password
+        user="root",  
+        password="Ashwini205@",  
         database="skill_sync"
     )
-
-# ------------------------------
 # Helper Functions
-# ------------------------------
 def run_query(query, params=(), fetch=False):
     conn = get_connection()
     cur = conn.cursor(dictionary=True)
@@ -56,9 +51,6 @@ def login_user(email, password):
     conn.close()
     return user
 
-# ------------------------------
-# Data Getters
-# ------------------------------
 def get_all_courses():
     return run_query("SELECT * FROM courses", fetch=True)
 
@@ -85,15 +77,12 @@ def get_submissions_for_expert(expert_id):
                         WHERE c.expert_id=%s ORDER BY s.submission_date DESC""",
                      (expert_id,), fetch=True)
 
-# ------------------------------
-# Utility
-# ------------------------------
+
 def wrap_labels(labels, max_width):
     return ['\n'.join([label[i:i+max_width] for i in range(0, len(label), max_width)]) for label in labels]
 
-# ------------------------------
 # Page Config and CSS
-# ------------------------------
+
 st.set_page_config(page_title="Skill Sync", layout="wide")
 
 st.markdown("""
@@ -107,9 +96,9 @@ body {font-family: 'Segoe UI', sans-serif;}
 .small {font-size:13px; color:#666;}
 </style>
 """, unsafe_allow_html=True)
-# ------------------------------
+
 # Student Dashboard
-# ------------------------------
+
 def student_dashboard(user):
     uid = user["user_id"]
     menu = ["Browse Courses", "My Courses", "Submit Task", "View Feedback", "Analytics"]
@@ -198,24 +187,20 @@ def student_dashboard(user):
     elif choice == "Analytics":
         st.markdown("<div class='section-title'>My Analytics</div>", unsafe_allow_html=True)
 
-    # Fetch metrics
         total_courses = run_one("SELECT COUNT(*) AS c FROM enrollments WHERE student_id=%s", (uid,)).get('c', 0)
         total_tasks = run_one("""SELECT COUNT(t.task_id) AS c FROM tasks t 
                              JOIN enrollments e ON t.course_id=e.course_id 
                              WHERE e.student_id=%s""", (uid,)).get('c', 0)
         total_sub = run_one("SELECT COUNT(*) AS c FROM submissions WHERE student_id=%s", (uid,)).get('c', 0)
 
-    # Progress capped at 100%
         progress = round(min((total_sub / total_tasks) * 100, 100), 1) if total_tasks > 0 else 0.0
 
-    # Display metrics
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Courses", total_courses)
         col2.metric("Tasks", total_tasks)
         col3.metric("Submitted", total_sub)
         col4.metric("Progress", f"{progress}%")
 
-    # Task progress bar chart
         fig, ax = plt.subplots(figsize=(5, 3))
         ax.bar(["Assigned", "Submitted"], [total_tasks, total_sub], color=['#0b5ed7', '#6c757d'])
         ax.set_ylabel("Count")
@@ -224,11 +209,9 @@ def student_dashboard(user):
             ax.text(i, v + 0.02, str(v), ha='center')
         plt.tight_layout()
         st.pyplot(fig)
-
         
-# ------------------------------
 # Expert Dashboard
-# ------------------------------
+
 def expert_dashboard(user):
     uid = user["user_id"]
     menu = ["Manage Tasks", "Review Submissions", "Analytics"]
@@ -252,7 +235,6 @@ def expert_dashboard(user):
             desc = st.text_area("Task Description", key="task_desc_expert")
             due = st.date_input("Due Date")
 
-        # Add Task Button
             if st.button("Add Task", key="add_task_btn"):
                 if not title.strip():
                     st.warning("Provide a task title.")
@@ -260,9 +242,8 @@ def expert_dashboard(user):
                     run_query("INSERT INTO tasks (course_id, title, description, due_date) VALUES (%s,%s,%s,%s)",
                           (mapping[sel], title.strip(), desc.strip(), due))
                     st.success("Task added successfully.")
-                    st.experimental_rerun()  # <-- reload after adding
+                    st.experimental_rerun() 
 
-        # --- Delete Existing Tasks ---
             tasks = run_query("SELECT task_id, title FROM tasks WHERE course_id=%s", (mapping[sel],), fetch=True)
             if tasks:
                 st.markdown("### Existing Tasks")
@@ -271,8 +252,7 @@ def expert_dashboard(user):
                     if st.button(f"Delete — {t['title']}", key=f"del_task_{t['task_id']}"):
                         run_query("DELETE FROM tasks WHERE task_id=%s", (t['task_id'],))
                         st.success(f"Deleted task: {t['title']}")
-                        st.experimental_rerun()  # <-- reload after deletion
-
+                        st.experimental_rerun() 
 
     elif choice == "Review Submissions":
         st.markdown("<div class='section-title'>Review Submissions</div>", unsafe_allow_html=True)
@@ -292,12 +272,10 @@ def expert_dashboard(user):
                 f"<div class='small'>File: {s['file_name'] or '—'}</div></div>", 
                 unsafe_allow_html=True
             )
-
-        # Feedback section
+       
             fb = st.text_area("Feedback", key=f"fb_{s['submission_id']}")
             rating = st.slider("Rating (1-5)", 1, 5, 4, key=f"rt_{s['submission_id']}")
 
-        # Save feedback
             if st.button("Save Feedback", key=f"savefb_{s['submission_id']}"):
                 run_query("DELETE FROM feedback WHERE submission_id=%s", (s['submission_id'],))
                 run_query(
@@ -305,14 +283,11 @@ def expert_dashboard(user):
                     (s['submission_id'], uid, fb.strip() or None, rating, date.today())
                 )
                 st.success("Feedback saved successfully.")
-                st.experimental_rerun()  # works more reliably than st.rerun()
-
-        # ✅ Delete submission
+                st.experimental_rerun()  
             if st.button("Delete Submission", key=f"del_{s['submission_id']}"):
                 run_query("DELETE FROM submissions WHERE submission_id=%s", (s['submission_id'],))
                 st.success("Submission deleted.")
                 st.experimental_rerun()
-
 
     elif choice == "Analytics":
         st.markdown("<div class='section-title'>Expert Analytics</div>", unsafe_allow_html=True)
@@ -336,12 +311,8 @@ def expert_dashboard(user):
     cur.close()
     conn.close()
 
-# ------------------------------
 # Admin Dashboard
 
-# ------------------------------
-# Admin Dashboard
-# ------------------------------
 def admin_dashboard(user):
     uid = user["user_id"]
     menu = ["Manage Users", "Manage Courses", "Analytics Overview"]
@@ -353,7 +324,6 @@ def admin_dashboard(user):
     conn = get_connection()
     cur = conn.cursor(dictionary=True)
 
-    # ------------------- MANAGE USERS -------------------
     if choice == "Manage Users":
         st.markdown("<div class='section-title'>Manage Users</div>", unsafe_allow_html=True)
         users = run_query("SELECT user_id, name, email, role FROM users", fetch=True)
@@ -364,7 +334,6 @@ def admin_dashboard(user):
 
             uid_del = st.number_input("Enter User ID to delete", min_value=1, step=1)
             if st.button("Delete User"):
-                # delete dependent data safely
                 run_query("DELETE FROM feedback WHERE expert_id=%s", (uid_del,))
                 subs = run_query("SELECT submission_id FROM submissions WHERE student_id=%s", (uid_del,), fetch=True)
                 for s in subs:
@@ -385,8 +354,6 @@ def admin_dashboard(user):
                 st.rerun()
         else:
             st.info("No users found.")
-
-    # ------------------- MANAGE COURSES -------------------
     elif choice == "Manage Courses":
         st.markdown("<div class='section-title'>Manage Courses</div>", unsafe_allow_html=True)
         courses = run_query("SELECT course_id, title, category FROM courses", fetch=True)
@@ -423,8 +390,6 @@ def admin_dashboard(user):
                 st.rerun()
         else:
             st.info("No experts available to assign courses.")
-
-    # ------------------- ANALYTICS OVERVIEW -------------------
     elif choice == "Analytics Overview":
         st.markdown("<div class='section-title'>Platform Analytics</div>", unsafe_allow_html=True)
     
@@ -432,13 +397,10 @@ def admin_dashboard(user):
         experts = run_one("SELECT COUNT(*) AS c FROM users WHERE role='expert'")["c"]
         courses = run_one("SELECT COUNT(*) AS c FROM courses")["c"]
 
-    # ✅ Proper metrics layout
         col1, col2, col3 = st.columns(3)
         col1.metric("Students", students)
         col2.metric("Experts", experts)
         col3.metric("Courses", courses)
-
-    # ✅ Bar chart
         fig, ax = plt.subplots()
         ax.bar(["Students", "Experts", "Courses"], [students, experts, courses],
                color=["#0b5ed7", "#6c757d", "#0b5ed7"])
@@ -446,15 +408,11 @@ def admin_dashboard(user):
         ax.set_title("Platform Overview")
         st.pyplot(fig)
 
-
-
     cur.close()
     conn.close()
 
-
-# ------------------------------
 # Login / Register Page
-# ------------------------------
+
 def login_register_page():
     choice = st.radio("Select Option", ["Login", "Register"], horizontal=True)
 
@@ -493,9 +451,6 @@ def login_register_page():
                 except mysql.connector.IntegrityError:
                     st.error("Email already exists. Please use a different email.")
 
-# ------------------------------
-# MAIN APP
-# ------------------------------
 def main():
     st.markdown("<div style='text-align:center'><h1 class='header'>Skill Sync</h1><div class='subheader'>Empowering Learners & Experts through Skill Development</div></div>", unsafe_allow_html=True)
 
