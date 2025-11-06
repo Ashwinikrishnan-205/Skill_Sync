@@ -101,7 +101,7 @@ body {font-family: 'Segoe UI', sans-serif;}
 
 def student_dashboard(user):
     uid = user["user_id"]
-    menu = ["Browse Courses", "My Courses", "Submit Task", "View Feedback", "Analytics"]
+    menu = ["Browse Courses", "My Courses", "Submit Task", "View Feedback", "Analytics","Profile"]
     choice = st.sidebar.radio("Student Menu", menu)
 
     conn = get_connection()
@@ -209,12 +209,34 @@ def student_dashboard(user):
             ax.text(i, v + 0.02, str(v), ha='center')
         plt.tight_layout()
         st.pyplot(fig)
+
+    elif choice == "Profile":
+        st.markdown("<div class='section-title'>Edit Profile</div>", unsafe_allow_html=True)
+
+        user_data = run_one("SELECT name, email, password, bio FROM users WHERE user_id=%s", (uid,))
+
+        new_name = st.text_input("Full Name", user_data["name"])
+        new_email = st.text_input("Email", user_data["email"])
+        new_password = st.text_input("Password", user_data["password"], type="password")
+        new_bio = st.text_area("Bio", user_data["bio"] or "")
+
+        if st.button("Save Changes"):
+            run_query("""
+                UPDATE users SET name=%s, email=%s, password=%s, bio=%s WHERE user_id=%s
+            """, (new_name.strip(), new_email.strip(), new_password.strip(), new_bio.strip(), uid))
+            st.session_state["user"]["name"] = new_name.strip()
+            st.session_state["user"]["email"] = new_email.strip()
+            st.session_state["user"]["bio"] = new_bio.strip()
+            st.success("Profile updated successfully! Refreshing...")
+            import time
+            time.sleep(2)
+            st.rerun()
         
 # Expert Dashboard
 
 def expert_dashboard(user):
     uid = user["user_id"]
-    menu = ["Manage Tasks", "Review Submissions", "Analytics"]
+    menu = ["Manage Tasks", "Review Submissions", "Analytics","Profile"]
     if "expert_menu" not in st.session_state:
         st.session_state["expert_menu"] = menu[0]
     choice = st.sidebar.radio("Expert Menu", menu, index=menu.index(st.session_state["expert_menu"]))
@@ -307,6 +329,28 @@ def expert_dashboard(user):
             ax.set_title("Students per Course")
             plt.tight_layout()
             st.pyplot(fig)
+            
+    elif choice == "Profile":
+        st.markdown("<div class='section-title'>Edit Profile</div>", unsafe_allow_html=True)
+
+        user_data = run_one("SELECT name, email, password, bio FROM users WHERE user_id=%s", (uid,))
+
+        new_name = st.text_input("Full Name", user_data["name"])
+        new_email = st.text_input("Email", user_data["email"])
+        new_password = st.text_input("Password", user_data["password"], type="password")
+        new_bio = st.text_area("Bio", user_data["bio"] or "")
+
+        if st.button("Save Changes"):
+            run_query("""
+                UPDATE users SET name=%s, email=%s, password=%s, bio=%s WHERE user_id=%s
+            """, (new_name.strip(), new_email.strip(), new_password.strip(), new_bio.strip(), uid))
+            st.session_state["user"]["name"] = new_name.strip()
+            st.session_state["user"]["email"] = new_email.strip()
+            st.session_state["user"]["bio"] = new_bio.strip()
+            st.success("Profile updated successfully! Refreshing...")
+            import time
+            time.sleep(2)
+            st.rerun()
 
     cur.close()
     conn.close()
@@ -315,7 +359,7 @@ def expert_dashboard(user):
 
 def admin_dashboard(user):
     uid = user["user_id"]
-    menu = ["Manage Users", "Manage Courses", "Analytics Overview"]
+    menu = ["Manage Users", "Manage Courses", "Analytics Overview","Profile"]
     if "admin_menu" not in st.session_state:
         st.session_state["admin_menu"] = menu[0]
     choice = st.sidebar.radio("Admin Menu", menu, index=menu.index(st.session_state["admin_menu"]))
@@ -411,6 +455,29 @@ def admin_dashboard(user):
         ax.set_title("Platform Overview")
         st.pyplot(fig)
 
+    elif choice == "Profile":
+        st.markdown("<div class='section-title'>Edit Profile</div>", unsafe_allow_html=True)
+
+        user_data = run_one("SELECT name, email, password, bio FROM users WHERE user_id=%s", (uid,))
+
+        new_name = st.text_input("Full Name", user_data["name"])
+        new_email = st.text_input("Email", user_data["email"])
+        new_password = st.text_input("Password", user_data["password"], type="password")
+        new_bio = st.text_area("Bio", user_data["bio"] or "")
+
+        if st.button("Save Changes"):
+            run_query("""
+                UPDATE users SET name=%s, email=%s, password=%s, bio=%s WHERE user_id=%s
+            """, (new_name.strip(), new_email.strip(), new_password.strip(), new_bio.strip(), uid))
+            
+            st.session_state["user"]["name"] = new_name.strip()
+            st.session_state["user"]["email"] = new_email.strip()
+            st.session_state["user"]["bio"] = new_bio.strip()
+            st.success("Profile updated successfully! Refreshing...")
+            import time
+            time.sleep(2)
+            st.rerun()
+
     cur.close()
     conn.close()
 
@@ -482,7 +549,6 @@ def main():
 
     else:
         login_register_page()
-
 
 if __name__ == "__main__":
     main()
