@@ -15,18 +15,21 @@ Designed to support students in learning, experts in mentoring, and administrato
 - Submit tasks with text or file upload
 - View expert feedback and ratings
 - Personal dashboard with learning analytics
+- Update profile details (name, email, bio, password)
 
 ### Expert Panel
 - Create and manage tasks for assigned courses
 - Review student submissions
 - Provide feedback and ratings
 - View course engagement analytics
+- Edit and update personal profile information
 
 ### Admin Panel
 - Manage users and courses
 - Assign experts to courses
 - Delete users and courses with complete data cascading
 - View platform-wide analytics and insights
+- Edit admin profile information
 
 ---
 
